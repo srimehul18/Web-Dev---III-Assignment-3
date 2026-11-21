@@ -134,4 +134,27 @@ const deleteProduct = async (req, res) => {
     }
 }
 
-export { createProduct, getProducts, getProductById, updateProduct, deleteProduct }
+const lowStockReport = async (req, res) => {
+    try {
+        const lowStockItems = await Product.find({
+            $expr: {
+                $lte: ['$quantity', '$reorderLevel']
+            }
+        })
+
+        res.status(200).json({
+            message: "Low stock report generated successfully",
+            success: true,
+            count: lowStockItems.length,
+            lowStockItems
+        })
+    }
+    catch (error) {
+        res.status(500).json({
+            message: error.message,
+            success: false
+        })
+    }
+}
+
+export { createProduct, getProducts, getProductById, updateProduct, deleteProduct, lowStockReport }
