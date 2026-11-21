@@ -22,7 +22,22 @@ const createProduct = async (req, res) => {
 
 const getProducts = async (req, res) => {
     try {
-        const products = await Product.find()
+        const { category, search, sort, page = 1, limit = 10 } = req.query
+
+        let filter = {}
+
+        if (category) {
+            filter.category = category
+        }
+
+        if (search) {
+            filter.name = { $regex: search, $options: 'i' }
+        }
+
+        const products = await Product.find(filter)
+            .sort(sort ? { price: sort === 'asc' ? 1 : -1 } : {})
+            .skip((page - 1) * limit)
+            .limit(Number(limit))
 
         res.status(200).json({
             message: "Products fetched successfully",
