@@ -157,4 +157,76 @@ const lowStockReport = async (req, res) => {
     }
 }
 
-export { createProduct, getProducts, getProductById, updateProduct, deleteProduct, lowStockReport }
+const categorySummary = async (req, res) => {
+    try {
+        const summary = await Product.aggregate([
+            {
+                $group: {
+                    _id: '$category',
+                    totalProducts: { $sum: 1 },
+                    totalQuantity: { $sum: '$quantity' },
+                    averagePrice: { $avg: '$price' }
+                }
+            }
+        ])
+
+        res.status(200).json({
+            message: "Category summary generated successfully",
+            success: true,
+            summary
+        })
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            success: false
+        })
+    }
+}
+
+const updateStock = async (req, res) => {
+    try {
+        const { change } = req.body
+
+        if (!Number.isInteger(change) || change === 0) {
+            return res.status(400).json({
+                message: "Change must be a non-zero integer",
+                success: false
+            })
+        }
+
+        const product = await Product.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                quantity: { $gte: Math.max(0, -change) }
+            },
+            {
+                $inc: { quantity: change }
+            },
+            {
+                new: true
+            }
+        )
+
+        if (!product) {
+            return res.status(400).json({
+                message: "Product not found or insufficient stock",
+                success: false
+            })
+        }
+
+        res.status(200).json({
+            message: "Stock updated successfully",
+            success: true,
+            product
+        })
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            success: false
+        })
+    }
+}
+
+export { createProduct, getProducts, getProductById, updateProduct, deleteProduct, lowStockReport, categorySummary, updateStock }
