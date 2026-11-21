@@ -1,12 +1,13 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import connectDB from './database/mongodb.js'
+import productRoutes from './routes/productRoutes.js'
 
 dotenv.config()
-console.log("PORT:", process.env.PORT)
-console.log("MONGO_URI:", process.env.MONGO_URI)
 
 const app = express()
+app.use(express.json())
+app.use('/api/products', productRoutes)
 
 const port = process.env.PORT
 connectDB()
